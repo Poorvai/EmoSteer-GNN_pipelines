@@ -19,4 +19,12 @@ EmoSteer (in review) proposes a training free method to steer the generation tow
 The GNNSteer pipeline leaves a few things for improvement. Its outputs show results only in evaluation metrics but sounds extremely similar to human ears.
 
 
+## Acknowledgements
 
+This project builds upon the official open-source implementation of **F5-TTS** by Chen et al.
+The original repository provides the base model architecture, training framework, and inference pipeline.
+
+Original repository:
+https://github.com/SWivid/F5-TTS
+
+All additional components in this repository—including GNNSteer, EmoSteer integration were developed by the authors of this project.
