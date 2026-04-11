@@ -16,7 +16,7 @@ F5TTS model was used with pre-trained weights to generate neutral outputs. Howev
 
 EmoSteer (in review) proposes a training free method to steer the generation towards specific emotions. However, the effects of emotions on the output were still very low. 
 
-The GNNSteer pipeline leaves a few things for improvement. Its outputs show results only in evaluation metrics but sounds extremely similar to human ears.
+The GNNSteer pipeline leaves a few things for improvement. Its outputs show results only in evaluation metrics but sound extremely similar to human ears.
 
 
 ## Acknowledgements
