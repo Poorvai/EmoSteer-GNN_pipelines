@@ -28,3 +28,8 @@ Original repository:
 https://github.com/SWivid/F5-TTS
 
 All additional components in this repository—including GNNSteer, EmoSteer integration were developed by the authors of this project.
+
+
+This project builds upon the ideas introduced in the EmoSteer paper, which proposes a training-free approach for emotion control in flow-matching text-to-speech models through activation-level steering at inference time. While the core concept of emotion steering is inspired by this work, the implementation presented in this project differs substantially in design choices, integration strategy, and execution.
+
+Original paper: EmoSteer: Training-Free Emotion Control for Flow-Matching TTS Models
