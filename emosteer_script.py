@@ -41,18 +41,18 @@ DATA_DIR   = "./EmoSteer/data_ravdess"
 STEER_PATH = f"./EmoSteer/{TARGET_EMOTION}_alpha2.pt"
 #OUTPUT_WAV = f"./Output/EmoSteer/{TARGET_EMOTION}.wav"
 
-# FIX 5 — lowered from 8.0; start here and increase only if effect is too weak
+# lowered from 8.0; start here and increase only if effect is too weak
 ALPHA = {
     "happy": 2.0,
     "sad": 1.5,
     "angry": 1.5,
 }[TARGET_EMOTION]
 
-# FIX 3 — top-k fraction of token positions to steer (0.0–1.0)
+# top-k fraction of token positions to steer (0.0–1.0)
 TOP_K_FRACTION     = 0.4
-# FIX 8 — raised from 15 for more reliable mean estimates
+# raised from 15 for more reliable mean estimates
 MAX_SAMPLES_PER_EMOTION = 40
-# FIX 4 — raised from 8; 32 matches the paper and keeps trajectory stable
+#  raised from 8; 32 matches the paper and keeps trajectory stable
 NFE_STEP           = 32
 # Deeper layers only (semantic/style content); same as before but documented
 STEER_LAYER_START  = 14
@@ -125,7 +125,7 @@ class RavdessDataset(torch.utils.data.Dataset):
                     parts[0], parts[1], parts[2], parts[3], parts[4]
                 )
 
-                # FIX 8 — accept both intensities to widen sample pool
+                # accept both intensities to widen sample pool
                 if not (
                     modality == "03"
                     and vocal == "01"
@@ -155,7 +155,7 @@ class RavdessDataset(torch.utils.data.Dataset):
 
     def neutral_sample(self) -> tuple[str, str, str]:
         """
-        FIX 6 — return a neutral sample for use as inference reference,
+        return a neutral sample for use as inference reference,
         avoiding prosody bleed-through from expressive speakers.
         """
         neutrals = [s for s in self.samples if s[2] == "neutral"]
@@ -201,7 +201,7 @@ def attach_hooks(model, storage: defaultdict) -> list:
 # ───────── STAT COLLECTION ─────────
 def collect_stats(dataset: RavdessDataset, model) -> dict:
     """
-    FIX 1 — Collect clean per-sample mean activations.
+    Collect clean per-sample mean activations.
     Shape stored: stats[(emotion, layer)] = list of (dim,) tensors.
     """
     stats: dict[tuple, list] = defaultdict(list)
@@ -225,7 +225,7 @@ def collect_stats(dataset: RavdessDataset, model) -> dict:
 
             try:
                 with torch.inference_mode():
-                    # FIX 7 — vocoder=None is intentional here (we only want
+                    # vocoder=None is intentional here (we only want
                     # activations); guarded so exceptions don't leave hooks dangling
                     infer_process(
                         ref_audio=path,
@@ -234,19 +234,19 @@ def collect_stats(dataset: RavdessDataset, model) -> dict:
                         model_obj=model,
                         vocoder=None,           # intentional: skip waveform decode
                         device=DEVICE,
-                        nfe_step=NFE_STEP,      # FIX 4
+                        nfe_step=NFE_STEP,      
                     )
             except Exception as exc:
                 warnings.warn(f"Forward pass failed for {path}: {exc}")
                 continue
             finally:
                 for h in hooks:
-                    h.remove()          # FIX 10 — always removed
+                    h.remove()          # — always removed
 
             for layer_idx, acts_list in storage.items():
                 # acts_list: list of (batch, seq, dim) across CFM steps
                 acts = torch.cat(acts_list, dim=0)   # (steps*batch, seq, dim)
-                # FIX 1 — clean mean across time steps and sequence positions
+                # clean mean across time steps and sequence positions
                 mean_act = acts.mean(dim=(0, 1))     # (dim,)
                 stats[(label, layer_idx)].append(mean_act)
 
@@ -259,7 +259,7 @@ def compute_token_weights(
     baseline_acts: torch.Tensor,  # (m_samples, dim)
 ) -> torch.Tensor:
     """
-    FIX 2 — Compute w_l via a simple softmax importance score:
+    Compute w_l via a simple softmax importance score:
     importance_d = |mean_target_d - mean_baseline_d|
     w_l = softmax(importance) over feature dim → scalar weight per position.
 
@@ -274,7 +274,7 @@ def compute_token_weights(
 
 def compute_steering(stats: dict) -> None:
     """
-    FIX 2, 9 — Compute and save both s_hat and w_l per layer.
+    Compute and save both s_hat and w_l per layer.
     Skips layers with insufficient cross-emotion coverage.
     """
     # Consolidate lists → tensors
@@ -300,7 +300,7 @@ def compute_steering(stats: dict) -> None:
             if e != TARGET_EMOTION and (e, layer_idx) in consolidated
         ]
 
-        # FIX 9 — need at least 2 other emotions for a reliable baseline
+        # need at least 2 other emotions for a reliable baseline
         if len(others) < 2:
             warnings.warn(
                 f"Layer {layer_idx}: only {len(others)} baseline emotion(s) "
@@ -314,7 +314,7 @@ def compute_steering(stats: dict) -> None:
         u = target_acts.mean(0) - baseline_acts.mean(0)            # (dim,)
         s_hat[layer_idx] = u / (torch.norm(u) + 1e-8)
 
-        # FIX 2 — token importance weights
+        # token importance weights
         w_l[layer_idx] = compute_token_weights(target_acts, baseline_acts)
 
     if not s_hat:
@@ -332,12 +332,12 @@ class EmotionSteerer:
     def __init__(self, path: str):
         d = torch.load(path, map_location=DEVICE)
         self.s_hat: dict[int, torch.Tensor] = d["s_hat"]
-        self.w_l:   dict[int, torch.Tensor] = d["w_l"]   # FIX 2
+        self.w_l:   dict[int, torch.Tensor] = d["w_l"]   # 
 
 
 def _top_k_mask(seq_len: int, scores: torch.Tensor, fraction: float) -> torch.Tensor:
     """
-    FIX 3 — Build a boolean mask of shape (seq_len,) that is True
+    Build a boolean mask of shape (seq_len,) that is True
     for the top-k sequence positions ranked by their projected importance.
     `scores` is a (seq_len,) tensor of per-position relevance.
     """
@@ -350,7 +350,7 @@ def _top_k_mask(seq_len: int, scores: torch.Tensor, fraction: float) -> torch.Te
 
 def attach_emosteer(model, steerer: EmotionSteerer) -> list:
     """
-    FIX 2, 3, 5 — Attach inference hooks that:
+     Attach inference hooks that:
       • apply only to layers ≥ STEER_LAYER_START
       • use w_l to score sequence positions, then mask to top-k
       • scale by local activation std (keeps magnitude relative)
@@ -379,7 +379,7 @@ def attach_emosteer(model, steerer: EmotionSteerer) -> list:
             pos_scores = (out * _w.unsqueeze(0).unsqueeze(0)).sum(-1).abs()
             pos_scores = pos_scores.mean(0)              # (seq_len,) avg over batch
 
-            # FIX 3 — build top-k mask
+            #  build top-k mask
             mask = _top_k_mask(seq_len, pos_scores, TOP_K_FRACTION)
             mask = mask.to(out.device)                   # (seq_len,)
 
@@ -423,10 +423,10 @@ def main():
     steerer = EmotionSteerer(STEER_PATH)
     hooks   = attach_emosteer(model, steerer)
 
-    # FIX 6 — use a neutral reference to minimise prosody bleed-through
+    # use a neutral reference to minimise prosody bleed-through
     print("Generating neutral audio (no steering) …")
 
-    # FIX 6 — use a neutral reference to minimise prosody bleed-through
+    #use a neutral reference to minimise prosody bleed-through
     ref_audio, ref_text, _ = dataset.neutral_sample()
 
     with torch.inference_mode():
@@ -462,7 +462,7 @@ def main():
             )
     finally:
         for h in hooks:
-            h.remove()   # FIX 10 — always cleaned up
+            h.remove()   # always cleaned up
 
     sf.write(OUTPUT_STEERED_WAV, steered_audio.squeeze(), sr)
     print(f"Saved steered: {OUTPUT_STEERED_WAV}")
