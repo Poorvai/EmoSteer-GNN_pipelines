@@ -7,9 +7,19 @@ In the initial stages of the project, we are targeting 3 distinct emotions ["hap
 
 ### Description of Execution
 All the files (.py files and .sh file) in the main branch are students' works, only taking inspiration from F5TTS inference files and the EmoSteer paper.
+
+Clone F5TTS: run the following in your terminal called from the folder
+{content: chmod +x clone_f5tts.sh
+./clone_f5tts.sh}
+
+After this, one can run F5TTS, EmoSteer or GNNSteer python scripts in terminal. 
+
+All generated outputs are provided for each script in the output folder. 
+
 #### Dataset
 VCTK-Corpus-0.92 (for style cloning) and Ravdess (for extracting emotion) datasets were used throughout these scripts. 
-These datasets need to be cloned in your workspace ahead of time. 
+These datasets need to be cloned in your workspace ahead of time. However, the files used in the code are already present in the folder, only download for further exploration.
+
 
 #### Models
 F5TTS model was used with pre-trained weights to generate neutral outputs. However, it copies the exact style of the reference audio, leaving little room for emotional manipulation. 
