@@ -9,9 +9,10 @@ In the initial stages of the project, we are targeting 3 distinct emotions ["hap
 All the files (.py files and .sh file) in the main branch are students' works, only taking inspiration from F5TTS inference files and the EmoSteer paper.
 
 Clone F5TTS: run the following in your terminal called from the folder
-{content: chmod +x clone_f5tts.sh
+```
+chmod +x clone_f5tts.sh
 ./clone_f5tts.sh}
-
+```
 After this, one can run F5TTS, EmoSteer or GNNSteer python scripts in terminal. 
 
 All generated outputs are provided for each script in the output folder. 
